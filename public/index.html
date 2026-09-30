@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PWS | Weather & Location API</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+        .card { background: white; padding: 35px 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); width: 100%; max-width: 480px; text-align: center; }
+        
+        .header-title { font-size: 14px; font-weight: bold; color: #555; letter-spacing: 1px; margin-bottom: 15px; }
+        .divider { border: none; height: 1px; background: #ddd; margin-bottom: 20px; }
+        
+        .profile-name { font-size: 18px; font-weight: bold; color: #222; margin-bottom: 5px; }
+        .profile-nim { font-size: 15px; color: #555; margin-bottom: 25px; }
+
+        .search-box { display: flex; gap: 10px; margin-bottom: 25px; }
+        input { flex: 1; padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 15px; outline: none; }
+        input:focus { border-color: #4f46e5; }
+        button { background-color: #312e81; color: white; border: none; padding: 0 20px; border-radius: 6px; font-size: 15px; cursor: pointer; font-weight: 500; transition: background 0.2s; }
+        button:hover { background-color: #1e1b4b; }
+
+        .result-container { text-align: left; background: #fafafa; padding: 15px 20px; border-radius: 8px; border: 1px solid #eee; display: none; }
+        .result-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #eee; font-size: 14px; }
+        .result-row:last-child { border-bottom: none; }
+        .label { font-weight: bold; color: #444; text-transform: uppercase; font-size: 12px; letter-spacing: 0.5px; }
+        .value { color: #333; font-weight: 500; text-align: right; max-width: 60%; word-break: break-word; }
+        
+        .error { color: #dc2626; font-size: 14px; margin-top: 10px; display: none; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="header-title">PWS | JULI 2026</div>
+        <hr class="divider">
+
+        <div class="profile-name">Bima Eko Nugroho</div>
+        <div class="profile-nim">20240140141</div>
+
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="Cari lokasi...">
+            <button onclick="cariLokasi()">Search</button>
+        </div>
+
+        <div class="error" id="errorMsg">Lokasi tidak dijumpai!</div>
+
+        <div class="result-container" id="resultContainer">
+            <div class="result-row">
+                <span class="label">PLACE NAME</span>
+                <span class="value" id="resPlaceName">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">MATCHING TEXT</span>
+                <span class="value" id="resMatchingText">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">TIPE</span>
+                <span class="value" id="resType">-</span>
+            </div>
+            <div class="result-row">
+                <span class="label">KOORDINAT</span>
+                <span class="value" id="resKoordinat">-</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function cariLokasi() {
+            const query = document.getElementById('searchInput').value.trim();
+            const resultContainer = document.getElementById('resultContainer');
+            const errorMsg = document.getElementById('errorMsg');
+
+            if (!query) return;
+
+            try {
+                const response = await fetch(`/api/lokasi?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+
+                if (data.features && data.features.length > 0) {
+                    const feature = data.features[0];
+
+                    document.getElementById('resPlaceName').innerText = feature.place_name || '-';
+                    document.getElementById('resMatchingText').innerText = feature.matching_text || feature.text || '-';
+                    document.getElementById('resType').innerText = feature.place_type ? feature.place_type.join(', ') : '-';
+                    document.getElementById('resKoordinat').innerText = feature.geometry && feature.geometry.coordinates ? feature.geometry.coordinates.join(', ') : '-';
+
+                    resultContainer.style.display = 'block';
+                    errorMsg.style.display = 'none';
+                } else {
+                    errorMsg.style.display = 'block';
+                    resultContainer.style.display = 'none';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.style.display = 'block';
+                resultContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
